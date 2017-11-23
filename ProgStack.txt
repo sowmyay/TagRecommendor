@@ -1,0 +1,17 @@
+std::stack<int> s;
+
+//---------------------------------
+// Container-Specific Operations
+//---------------------------------
+
+//Push
+s.push(20);
+
+//Size
+unsigned int size = s.size();
+
+//Pop
+s.pop();
+
+//Top
+int top = s.top();

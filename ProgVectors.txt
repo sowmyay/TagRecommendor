@@ -1,0 +1,31 @@
+std::vector<int> v;
+
+//---------------------------------
+// General Operations
+//---------------------------------
+
+//Insert head, index, tail
+v.insert(v.begin(), value);             //head
+v.insert(v.begin() + index, value);     //index
+v.push_back(value);                     //tail
+
+//Access head, index, tail
+int head = v.front();       //head
+int value = v.at(index);    //index
+int tail = v.back();        //tail
+
+//Size
+unsigned int size = v.size();
+
+//Iterate
+for(std::vector<int>::iterator it = v.begin(); it != v.end(); it++) {
+    std::cout << *it << std::endl;
+}
+
+//Remove head, index, tail
+v.erase(v.begin());             //head
+v.erase(v.begin() + index);     //index
+v.pop_back();                   //tail
+
+//Clear
+v.clear();

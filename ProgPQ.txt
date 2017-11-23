@@ -1,0 +1,17 @@
+std::priority_queue<int> p;
+
+//---------------------------------
+// General Operations
+//---------------------------------
+
+//Insert
+p.push(value);
+
+//Access
+int top = p.top();  //`Top` element
+
+//Size
+unsigned int size = p.size();
+
+//Remove
+p.pop();

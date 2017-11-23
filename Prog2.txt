@@ -1,0 +1,247 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
+#include <omp.h>
+
+struct node {
+	int vertex;
+	struct node *next;
+	struct node *end;
+};
+
+struct node* newNode(int vertex) {
+	struct node *temp = (struct node*) (malloc(sizeof(struct node)));
+	if (temp == NULL) {
+		printf("Unable to find memory! \n");
+		return NULL;
+	}
+	temp->vertex = vertex;
+	temp->next = NULL;
+	temp->end = NULL;
+	return temp;
+}
+
+void Insert(struct node* parent, struct node* new) {
+//	printf("Adding edge: %d\n", new->vertex);
+	while (parent->next != NULL) {
+		parent->end = new->end == NULL ? new : new->end;
+		parent = parent->next;
+	}
+	parent->end = new->end == NULL ? new : new->end;
+	parent->next = new;
+}
+int IsNeigbour(int source, int target, struct node** Graph) {
+	struct node * parent;
+	parent = Graph[source];
+	while (parent->next != NULL) {
+		parent = parent->next;
+		if (parent->vertex == target) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+void Delete(struct node* parent) {
+	if (parent == NULL) {
+		printf("Nothing To Delete\n");
+		return;
+	}
+	struct node* temp;
+	while (parent->next != NULL) {
+		temp = parent;
+		parent = parent->next;
+		temp->next = NULL;
+		temp->end = NULL;
+//		printf("Deleteing node %d\n", temp->vertex);
+		free(temp);
+	}
+	parent->next = NULL;
+	parent->end = NULL;
+//	printf("Deleteing node %d\n", parent->vertex);
+	free(parent);
+}
+
+void Addedge(int source, int target, struct node** Graph) {
+//	printf("Source edge: %d\n", Graph[source]->vertex);
+	struct node * edge = newNode(target);
+	Insert(Graph[source], edge);
+}
+
+void GetNeighbours(int source, struct node** Graph) {
+	struct node * parent;
+	parent = Graph[source];
+	if (parent->next == NULL) {
+		printf("No neighbours for node %d\n", source);
+		return;
+	}
+	parent = parent->next;
+	printf("Neighbours of %d: ", source);
+	while (parent->next != NULL) {
+		printf(" %d,", parent->vertex);
+		parent = parent->next;
+	}
+	printf(" %d\n", parent->vertex);
+}
+
+struct node** CreateGraph(int numVertices) {
+	struct node **Graph = (struct node **) (malloc(
+			numVertices * sizeof(struct node *)));
+	if (Graph == NULL) {
+		printf("Unable to find memory! \n");
+		return NULL;
+	}
+	for (int i = 0; i < numVertices; i++) {
+		Graph[i] = newNode(i);
+	}
+	return Graph;
+}
+
+void MergeGraphs(int numVertices, struct node** g1, struct node** g2) {
+//#pragma omp parallel
+	{
+//		int ID = omp_get_thread_num();
+//		int NT = omp_get_num_threads();
+		int ID = 0, NT = 1;
+		for (int i = ID; i < numVertices; i = i + NT) {
+			struct node *temp;
+			if (g1[i]->end == NULL)
+				temp = g1[i];
+			else
+				temp = g1[i]->end;
+			if (g2[i]->next != NULL) {
+				temp->next = g2[i]->next;
+				g1[i]->end = g2[i]->end;
+				g2[i]->next = NULL;
+				g2[i]->end = NULL;
+			}
+		}
+	}
+}
+
+void DeleteGraph(struct node** Graph, int num) {
+	for (int i = 0; i < num; i++) {
+		if (Graph != NULL) {
+			Delete(Graph[i]);
+		}
+	}
+}
+
+void DFS(int source, struct node** Graph, int *vertices, int *size) {
+	struct node * parent;
+	parent = Graph[source];
+	if (vertices[parent->vertex] == 0)
+		vertices[parent->vertex] = 1;
+	while (parent->next != NULL) {
+		parent = parent->next;
+		if (vertices[parent->vertex] == 0) {
+			vertices[parent->vertex] = 1;
+			(*size)++;
+//			printf(" %d ", parent->vertex);
+			DFS(parent->vertex, Graph, vertices, size);
+		}
+	}
+}
+
+int main(int argc, char *argv[]) {
+	if (argc != 4) {
+		return 1;
+	}
+
+	int numVertices = (int) strtol(argv[1], NULL, 10);
+	double prob = strtod(argv[2], NULL);
+	int numThreads = (int) strtol(argv[3], NULL, 10);
+
+	unsigned int * randomNumbers = (unsigned int *) (malloc(
+			numThreads * sizeof(unsigned int)));
+	if (randomNumbers == NULL) {
+		printf("Unable to find memory! \n");
+		return 1;
+	}
+
+	srand(time(0));
+	printf("Number of Vertices : %d, Probability: %f Number of threads: %d\n",
+			numVertices, prob, numThreads);
+
+	for (int i = 0; i < numThreads; i++) {
+		randomNumbers[i] = (unsigned int) rand();
+	}
+
+	struct node*** graph = (struct node***) (malloc(
+			numThreads * sizeof(struct node**)));
+	if (graph == NULL) {
+		printf("Unable to find memory! \n");
+		return 1;
+	}
+
+	omp_set_num_threads(numThreads);
+	struct timeval begin, end;
+	gettimeofday(&begin, NULL);
+
+#pragma omp parallel
+	{
+		int ID = omp_get_thread_num();
+		int NT = omp_get_num_threads();
+		unsigned int seed = randomNumbers[ID];
+		struct node** g = CreateGraph(numVertices);
+
+		for (int i = ID; i < numVertices; i = i + NT) {
+			for (int j = i + 1; j < numVertices; j = j + 1) {
+
+				double value = 0;
+				int a = rand_r(&seed);
+				value = (double) a / (double) ((unsigned) RAND_MAX + 1);
+				if (prob >= value) {
+					Addedge(i, j, g);
+					Addedge(j, i, g);
+				}
+			}
+		}
+		graph[ID] = g;
+	}
+
+	for (int j = 1; j < numThreads; j++) {
+		MergeGraphs(numVertices, graph[0], graph[j]);
+	}
+	gettimeofday(&end, NULL);
+
+	double elapsed = (end.tv_sec - begin.tv_sec)
+			+ ((end.tv_usec - begin.tv_usec) / 1000000.0);
+	printf("Time elapsed: %f\n", elapsed);
+
+//	for (int j = 0; j < numVertices; j++)
+//		GetNeighbours(j, graph[0]);
+
+	int *vertices = (int*) (malloc(numVertices * sizeof(int)));
+	for (int i = 0; i < numVertices; i++) {
+		vertices[i] = 0;
+	}
+	int cc = 0, max = 0, size = 1;
+	for (int i = 0; i < numVertices; i++) {
+		if (vertices[graph[0][i]->vertex] == 0) {
+			cc++;
+//			printf("Searching vertex %d: ", i);
+			DFS(i, graph[0], vertices, &size);
+//			printf("\n size: %d\n",size );
+			if (size > max)
+				max = size;
+			size = 1;
+		}
+	}
+
+	free(vertices);
+	if (randomNumbers != NULL) {
+		free(randomNumbers);
+	}
+
+	printf("Number of connected components = %d, max size = %d\n",
+			cc, max);
+
+	for (int i = 0; i < numThreads; i++) {
+		DeleteGraph(graph[i], numVertices);
+	}
+	free(graph);
+
+}
+
