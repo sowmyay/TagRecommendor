@@ -10,6 +10,8 @@ def cppDataTypes(keylines):
         elif "list" in line:
             d.add("list")
             # print "list"
+        elif "enum" in line:
+            d.add("enums")
         elif "map" in line:
             d.add("map")
             # print "map"
@@ -25,6 +27,27 @@ def cppDataTypes(keylines):
         elif "priority_queue" in line:
             d.add("priority queue")
             # print "priority queue"
+        elif "deque" in line:
+            d.add("deque")
+            # print "vector"
+        elif "istringstream" in line:
+            d.add("istringstream")
+            # print "vector"
+        elif "stringstream" in line:
+            d.add("stringstream")
+            # print "vector"
+        elif "ostringstream" in line:
+            d.add("ostringstream")
+            # print "vector"
+        elif "sstream" in line:
+            d.add("sstream")
+            # print "vector"
+        elif "istream" in line:
+            d.add("istream")
+            # print "vector"
+        elif "iostream" in line:
+            d.add("iostream")
+            # print "vector"
         elif "int" in line:
             d.add("int")
             # print "int"
@@ -43,6 +66,8 @@ def cppDataTypes(keylines):
         elif "long" in line:
             d.add("long")
             # print "long"
+        elif "array" in "line":
+            d.add("array")
         else:
             for str in line:
                 if "[" in str and "]" in str:
@@ -60,6 +85,8 @@ def javaDataTypes(keylines):
         if "LinkedList" in line:
             d.add("Linked List")
             # print "Linked List"
+        elif "enum" in line:
+            d.add("enums")
         elif "Enumeration" in line:
             d.add("Enumeration")
             # print "vector"
@@ -116,39 +143,6 @@ def javaDataTypes(keylines):
                 if "[" in str and "]" in str:
                     d.add("array")
     return d
-
-def getOperatorOnDT(keylines, dataType):
-    if dataType == "vector":
-        print "vector"
-    elif dataType == "list":
-        print "list"
-    elif dataType == "map":
-        print "map"
-    elif dataType == "set":
-        print "set"
-    elif dataType == "stack":
-        print "stack"
-    elif dataType == "queue":
-        print "queue"
-    elif dataType == "priority_queue":
-        print "priority queue"
-    elif dataType == "int":
-        print "int"
-    elif dataType == "char":
-        print "char"
-    elif dataType == "bool":
-        print "bool"
-    elif dataType == "float":
-        print "float"
-    elif dataType == "double":
-        print "double"
-    elif dataType == "long":
-        print "long"
-    elif dataType == "array":
-        print "array"
-    elif dataType == "pointer":
-        print "pointer"
-    return
 
 def getDataType(keylines, lang):
     if lang == "c++":

@@ -1,6 +1,7 @@
 import sys
 
 import DataType
+import Operators
 
 
 def ParseCode(line,delimiters):
@@ -93,4 +94,5 @@ with open(input_file, 'r') as interest_data:
 # print data
 print keylines
 DataType.getDataType(keylines, "c++")
+print Operators.getOperatorTags(cursor_words)
 
